@@ -1,5 +1,6 @@
 package com.example.cropdoctor.ui.screens.results
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,24 +29,116 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.cropdoctor.R
 import com.example.cropdoctor.domain.DiagnosisResult
+import com.example.cropdoctor.ui.components.shimmerBackground
+import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisUiState
+import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisViewModel
 import com.example.cropdoctor.ui.theme.LightGreen
 
 @Composable
 fun ResultScreen(
+    imageUri: Uri,
+    viewModel: DiagnosisViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(imageUri) {
+        viewModel.analyzeImage(imageUri, context.contentResolver)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.resetState()
+        }
+    }
+
+    when (val state = uiState) {
+        is DiagnosisUiState.Loading,
+        is DiagnosisUiState.Idle -> {
+            ResultShimmerScreen()
+        }
+        is DiagnosisUiState.Success -> {
+            ResultSuccessScreen(result = state.diagnosisResults.first(), onNavigateBack = onNavigateBack)
+        }
+        is DiagnosisUiState.Error -> {
+            ErrorScreen(message = state.message, onRetry = onNavigateBack)
+        }
+    }
+}
+
+@Composable
+private fun ResultShimmerScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LightGreen)
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(Modifier.height(48.dp)) // Placeholder for TopAppBar
+
+        // Shimmer for DiagnosisCard
+        Card(modifier = Modifier.fillMaxWidth().height(112.dp)) {
+            Box(modifier = Modifier.fillMaxSize().shimmerBackground())
+        }
+        Spacer(Modifier.height(16.dp))
+
+        // Shimmer for InfoCards
+        repeat(3) {
+            Card(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+                Box(modifier = Modifier.fillMaxSize().shimmerBackground())
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ErrorScreen(message: String, onRetry: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Analysis Failed", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(message, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = onRetry) {
+                    Text("Try Again")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultSuccessScreen(
     result: DiagnosisResult,
-    onNavigateBack: () -> Unit // Used for both hamburger and new scan
+    onNavigateBack: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.background(LightGreen),
@@ -99,7 +192,7 @@ private fun TopAppBar() {
         Image(
             painter = painterResource(id = R.drawable.ic_cropdoctor_logo),
             contentDescription = "CropDoctor Logo",
-            modifier = Modifier.height(36.dp)
+            modifier = Modifier.height(32.dp)
         )
         Icon(painter = painterResource(id = R.drawable.ic_notification), contentDescription = "Notifications")
     }
@@ -110,7 +203,7 @@ private fun DiagnosisCard(result: DiagnosisResult) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDE7E7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -141,7 +234,7 @@ private fun InfoCard(title: String, items: List<Pair<String, String>>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -162,7 +255,7 @@ private fun BottomBar(onNewScan: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White.copy(alpha = 0.8f)) // Translucent white
+            .background(Color.White.copy(alpha = 0.8f))
             .padding(16.dp)
     ) {
         Row(

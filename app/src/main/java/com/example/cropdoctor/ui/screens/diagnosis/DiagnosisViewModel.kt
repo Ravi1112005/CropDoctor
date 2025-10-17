@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.cropdoctor.data.FakePlantClassifier
 import com.example.cropdoctor.domain.DiagnosisResult
 import com.example.cropdoctor.domain.PlantClassifier
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -37,14 +38,14 @@ class DiagnosisViewModel : ViewModel() {
     // A simple cache to hold the latest results.
     private var latestResults: Pair<Uri, List<DiagnosisResult>>? = null
 
-
-    /**
-     * Starts the analysis of a given image URI.
-     */
+    
     fun analyzeImage(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             _uiState.value = DiagnosisUiState.Loading
             try {
+                // Simulate a longer ML processing delay for a better user experience
+                delay(5000L)
+
                 val bitmap = uriToBitmap(uri, contentResolver)
                 if (bitmap == null) {
                     _uiState.value = DiagnosisUiState.Error("Could not process the selected image.")

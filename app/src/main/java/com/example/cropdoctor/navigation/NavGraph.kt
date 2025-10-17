@@ -2,7 +2,6 @@ package com.example.cropdoctor.navigation
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -24,7 +23,7 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun NavGraph(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ) {
     val diagnosisViewModel: DiagnosisViewModel = viewModel()
 
@@ -33,9 +32,9 @@ fun NavGraph(
         startDestination = Screen.Diagnosis.route
     ) {
         composable(Screen.Diagnosis.route) {
+            // The DiagnosisScreen's only job is to capture an image and navigate.
             DiagnosisScreen(
-                viewModel = diagnosisViewModel,
-                onNavigateToResult = { uri ->
+                onImageCaptured = { uri ->
                     navController.navigate(Screen.Result.createRoute(uri))
                 }
             )
@@ -46,35 +45,19 @@ fun NavGraph(
             arguments = listOf(navArgument("imageUri") { type = NavType.StringType })
         ) { backStackEntry ->
             val uriString = backStackEntry.arguments?.getString("imageUri")
-
-            // Safely parse the URI, remembering the result. Returns null on failure.
             val imageUri = remember(uriString) {
                 try {
                     uriString?.let { Uri.parse(Uri.decode(it)) }
                 } catch (e: Exception) {
-                    // Invalid URI format
-                    null
+                    null // Invalid URI format, will be handled in ResultScreen
                 }
             }
 
-            val results = imageUri?.let { diagnosisViewModel.getResultForUri(it) }
-
-            // This single LaunchedEffect handles all failure cases: invalid URI or missing results.
-            // It is correctly placed at the top level of the composable.
-            LaunchedEffect(imageUri, results) {
-                if (imageUri == null || results.isNullOrEmpty()) {
-                    navController.popBackStack()
-                }
-            }
-
-            // Only render the screen if we have valid data. This prevents flicker or crashes
-            // while the LaunchedEffect above prepares to navigate back.
-            if (results != null && results.isNotEmpty()) {
+            if (imageUri != null) {
                 ResultScreen(
-                    result = results.first(),
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
+                    imageUri = imageUri,
+                    viewModel = diagnosisViewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
