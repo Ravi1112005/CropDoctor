@@ -12,6 +12,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,12 +29,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import coil.compose.AsyncImage
 import com.example.cropdoctor.R
 import java.io.File
 import java.util.concurrent.Executor
@@ -45,6 +49,7 @@ fun CameraView(
     context: Context,
     lifecycleOwner: LifecycleOwner,
     onImageCaptured: OnImageCaptured,
+    galleryPreviewUri: Uri?,
     onGalleryClicked: () -> Unit
 ) {
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
@@ -52,7 +57,6 @@ fun CameraView(
     val imageCapture = remember { ImageCapture.Builder().build() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Live camera preview
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
@@ -74,12 +78,10 @@ fun CameraView(
             }
         )
 
-        // UI Overlay
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Logo
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -90,11 +92,10 @@ fun CameraView(
                 Image(
                     painter = painterResource(id = R.drawable.ic_cropdoctor_logo),
                     contentDescription = "CropDoctor Logo",
-                    modifier = Modifier.height(36.dp)
+                    modifier = Modifier.height(50.dp)
                 )
             }
 
-            // Bottom Controls
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,25 +103,43 @@ fun CameraView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Gallery Button
-                IconButton(onClick = onGalleryClicked) {
-                    Icon(painter = painterResource(id = R.drawable.ic_gallery), contentDescription = "Gallery", tint = Color.White, modifier = Modifier.size(40.dp))
-                }
+                GalleryPreview(uri = galleryPreviewUri, onClick = onGalleryClicked)
 
-                // Capture Button
                 IconButton(
                     onClick = { takePhoto(context, imageCapture, cameraExecutor, onImageCaptured) },
                     modifier = Modifier
                         .size(80.dp)
                         .background(Color.White, CircleShape)
-                        .border(4.dp, Color(0xFFB9E4C3), CircleShape) // Light green border
+                        .border(4.dp, Color(0xFFB9E4C3), CircleShape)
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.ic_camera_filled), contentDescription = "Take Photo", tint = Color(0xFF2E7D32), modifier = Modifier.size(40.dp)) // Dark green icon
+                    Icon(painter = painterResource(id = R.drawable.ic_camera_filled), contentDescription = "Take Photo", tint = Color(0xFF2E7D32), modifier = Modifier.size(40.dp))
                 }
 
-                // Spacer to balance the layout
-                Box(modifier = Modifier.size(40.dp))
+                Box(modifier = Modifier.size(40.dp)) // Spacer
             }
+        }
+    }
+}
+
+@Composable
+private fun GalleryPreview(uri: Uri?, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .clip(CircleShape)
+            .border(2.dp, Color.White, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (uri != null) {
+            AsyncImage(
+                model = uri,
+                contentDescription = "Most recent gallery image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Icon(painter = painterResource(id = R.drawable.ic_gallery), contentDescription = "Gallery", tint = Color.White)
         }
     }
 }

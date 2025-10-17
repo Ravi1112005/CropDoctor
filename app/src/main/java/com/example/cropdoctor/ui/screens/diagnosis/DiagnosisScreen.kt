@@ -1,9 +1,13 @@
 package com.example.cropdoctor.ui.screens.diagnosis
 
 import android.Manifest
+import android.content.ContentUris
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,18 +31,50 @@ fun DiagnosisScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var hasCameraPermission by remember { mutableStateOf(false) }
+    var hasStoragePermission by remember { mutableStateOf(false) }
+    var recentImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-        if (!isGranted) {
-            Toast.makeText(context, "Camera permission is required.", Toast.LENGTH_LONG).show()
-        }
+    val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        Manifest.permission.READ_EXTERNAL_STORAGE
     }
 
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> uri?.let { onImageCaptured(it) } }
+    )
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted -> hasCameraPermission = isGranted }
+
+    val storagePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted -> hasStoragePermission = isGranted }
+
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
+        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        storagePermissionLauncher.launch(storagePermission)
+    }
+
+    LaunchedEffect(hasStoragePermission) {
+        if (hasStoragePermission) {
+            val projection = arrayOf(MediaStore.Images.Media._ID)
+            val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+            context.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                null,
+                null,
+                sortOrder
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                    recentImageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                }
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -46,9 +82,12 @@ fun DiagnosisScreen(
             CameraView(
                 context = context,
                 lifecycleOwner = lifecycleOwner,
-                onImageCaptured = onImageCaptured, // Directly pass the navigation lambda
-                onGalleryClicked = {
-                    Toast.makeText(context, "Gallery feature coming soon!", Toast.LENGTH_SHORT).show()
+                onImageCaptured = onImageCaptured,
+                galleryPreviewUri = recentImageUri, // Pass the recent image URI
+                onGalleryClicked = { // Launch the photo picker on click
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
                 }
             )
         } else {
