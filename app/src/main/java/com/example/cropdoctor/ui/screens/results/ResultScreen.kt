@@ -50,7 +50,6 @@ import com.example.cropdoctor.domain.DiagnosisResult
 import com.example.cropdoctor.ui.components.shimmerBackground
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisUiState
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisViewModel
-import com.example.cropdoctor.ui.theme.LightGreen
 
 @Composable
 fun ResultScreen(
@@ -71,38 +70,52 @@ fun ResultScreen(
         }
     }
 
-    when (val state = uiState) {
-        is DiagnosisUiState.Loading,
-        is DiagnosisUiState.Idle -> {
-            ResultShimmerScreen()
+    val state = uiState
+    // The Scaffold applies the correct background color from the theme to the whole screen
+    Scaffold(
+        bottomBar = {
+            if (state is DiagnosisUiState.Success) {
+                BottomBar(onNewScan = onNavigateBack)
+            }
         }
-        is DiagnosisUiState.Success -> {
-            ResultSuccessScreen(result = state.diagnosisResults.first(), onNavigateBack = onNavigateBack)
-        }
-        is DiagnosisUiState.Error -> {
-            ErrorScreen(message = state.message, onRetry = onNavigateBack)
+    ) { paddingValues ->
+        when (state) {
+            is DiagnosisUiState.Loading,
+            is DiagnosisUiState.Idle -> {
+                ResultShimmerScreen(modifier = Modifier.padding(paddingValues))
+            }
+            is DiagnosisUiState.Success -> {
+                ResultSuccessScreen(
+                    result = state.diagnosisResults.first(),
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+            is DiagnosisUiState.Error -> {
+                ErrorScreen(
+                    message = state.message,
+                    onRetry = onNavigateBack,
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ResultShimmerScreen() {
+private fun ResultShimmerScreen(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(LightGreen)
             .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.height(48.dp)) // Placeholder for TopAppBar
+        Spacer(Modifier.height(56.dp)) // Placeholder for TopAppBar
 
-        // Shimmer for DiagnosisCard
         Card(modifier = Modifier.fillMaxWidth().height(112.dp)) {
             Box(modifier = Modifier.fillMaxSize().shimmerBackground())
         }
         Spacer(Modifier.height(16.dp))
 
-        // Shimmer for InfoCards
         repeat(3) {
             Card(modifier = Modifier.fillMaxWidth().height(150.dp)) {
                 Box(modifier = Modifier.fillMaxSize().shimmerBackground())
@@ -113,8 +126,8 @@ private fun ResultShimmerScreen() {
 }
 
 @Composable
-private fun ErrorScreen(message: String, onRetry: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+private fun ErrorScreen(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -123,9 +136,9 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Analysis Failed", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("Analysis Failed", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(8.dp))
-                Text(message, textAlign = TextAlign.Center)
+                Text(message, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(16.dp))
                 Button(onClick = onRetry) {
                     Text("Try Again")
@@ -138,44 +151,35 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
 @Composable
 private fun ResultSuccessScreen(
     result: DiagnosisResult,
-    onNavigateBack: () -> Unit
+    modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        modifier = Modifier.background(LightGreen),
-        bottomBar = {
-            BottomBar(onNewScan = onNavigateBack)
-        }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LightGreen)
-                .padding(it)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            TopAppBar()
-            Spacer(Modifier.height(16.dp))
-            DiagnosisCard(result)
-            Spacer(Modifier.height(16.dp))
+        TopAppBar()
+        Spacer(Modifier.height(16.dp))
+        DiagnosisCard(result)
+        Spacer(Modifier.height(16.dp))
 
-            val aboutItems = listOf(
-                "✔" to "Symptoms: ${result.description}",
-                "✔" to "Disease Type: ${result.diseaseType}"
-            )
-            InfoCard(title = "About the Disease", items = aboutItems)
-            Spacer(Modifier.height(16.dp))
+        val aboutItems = listOf(
+            "✔" to "Symptoms: ${result.description}",
+            "✔" to "Disease Type: ${result.diseaseType}"
+        )
+        InfoCard(title = "About the Disease", items = aboutItems)
+        Spacer(Modifier.height(16.dp))
 
-            val treatmentItems = result.treatment.mapIndexed { index, treatment ->
-                (index + 1).toString() to treatment
-            }
-            InfoCard(title = "Recommended Treatment", items = treatmentItems)
-            Spacer(Modifier.height(16.dp))
-
-            val preventionItems = result.prevention.map { "✔" to it }
-            InfoCard(title = "Prevention", items = preventionItems)
-            Spacer(Modifier.height(16.dp))
+        val treatmentItems = result.treatment.mapIndexed { index, treatment ->
+            (index + 1).toString() to treatment
         }
+        InfoCard(title = "Recommended Treatment", items = treatmentItems)
+        Spacer(Modifier.height(16.dp))
+
+        val preventionItems = result.prevention.map { "✔" to it }
+        InfoCard(title = "Prevention", items = preventionItems)
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -188,13 +192,13 @@ private fun TopAppBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Icon(painter = painterResource(id = R.drawable.ic_menu), contentDescription = "Menu")
+        Icon(painter = painterResource(id = R.drawable.ic_menu), contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
         Image(
             painter = painterResource(id = R.drawable.ic_cropdoctor_logo),
             contentDescription = "CropDoctor Logo",
-            modifier = Modifier.height(32.dp)
+            modifier = Modifier.height(42.dp)
         )
-        Icon(painter = painterResource(id = R.drawable.ic_notification), contentDescription = "Notifications")
+        Icon(painter = painterResource(id = R.drawable.ic_notification), contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onBackground)
     }
 }
 
@@ -219,11 +223,11 @@ private fun DiagnosisCard(result: DiagnosisResult) {
             )
             Spacer(Modifier.size(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "${result.disease} Detected!", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text(text = "${(result.confidence * 100).toInt()}% Confidence", color = Color.Gray)
+                Text(text = "${result.disease} Detected!", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "${(result.confidence * 100).toInt()}% Confidence", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
             IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                Icon(Icons.Default.MoreVert, contentDescription = "More Options", tint = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -237,12 +241,12 @@ private fun InfoCard(title: String, items: List<Pair<String, String>>) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(8.dp))
             items.forEach { (prefix, text) ->
                 Row(verticalAlignment = Alignment.Top) {
-                    Text(text = prefix, modifier = Modifier.padding(end = 8.dp))
-                    Text(text = text)
+                    Text(text = prefix, modifier = Modifier.padding(end = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = text, color = MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(Modifier.height(4.dp))
             }
@@ -255,7 +259,7 @@ private fun BottomBar(onNewScan: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White.copy(alpha = 0.8f))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
             .padding(16.dp)
     ) {
         Row(
@@ -266,7 +270,7 @@ private fun BottomBar(onNewScan: () -> Unit) {
             Button(onClick = onNewScan, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                 Icon(painter = painterResource(id = R.drawable.ic_camera_filled), contentDescription = "New Scan")
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("New Scan")
+                Text("New Scan", color = MaterialTheme.colorScheme.onPrimary)
             }
             Button(onClick = { /* TODO: Share */ }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent), contentPadding = PaddingValues()) {
                 Icon(painter = painterResource(id = R.drawable.ic_share), contentDescription = "Share Report", tint = MaterialTheme.colorScheme.primary)
