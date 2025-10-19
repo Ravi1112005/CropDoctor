@@ -13,6 +13,7 @@ import androidx.navigation.navArgument
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisScreen
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisViewModel
 import com.example.cropdoctor.ui.screens.results.ResultScreen
+import androidx.core.net.toUri
 
 sealed class Screen(val route: String) {
     object Diagnosis : Screen("diagnosis")
@@ -47,7 +48,7 @@ fun NavGraph(
             val uriString = backStackEntry.arguments?.getString("imageUri")
             val imageUri = remember(uriString) {
                 try {
-                    uriString?.let { Uri.parse(Uri.decode(it)) }
+                    uriString?.let { Uri.decode(it).toUri() }
                 } catch (e: Exception) {
                     null // Invalid URI format, will be handled in ResultScreen
                 }

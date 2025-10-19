@@ -71,10 +71,9 @@ fun ResultScreen(
     }
 
     val state = uiState
-    // The Scaffold applies the correct background color from the theme to the whole screen
     Scaffold(
         bottomBar = {
-            if (state is DiagnosisUiState.Success) {
+            if (state is DiagnosisUiState.Success && state.diagnosisResults.isNotEmpty()) {
                 BottomBar(onNewScan = onNavigateBack)
             }
         }
@@ -85,10 +84,18 @@ fun ResultScreen(
                 ResultShimmerScreen(modifier = Modifier.padding(paddingValues))
             }
             is DiagnosisUiState.Success -> {
-                ResultSuccessScreen(
-                    result = state.diagnosisResults.first(),
-                    modifier = Modifier.padding(paddingValues)
-                )
+                if (state.diagnosisResults.isNotEmpty()) {
+                    ResultSuccessScreen(
+                        results = state.diagnosisResults,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                } else {
+                    ErrorScreen(
+                        message = "Could not find a matching disease with high confidence. Please try a clearer image.",
+                        onRetry = onNavigateBack,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
             is DiagnosisUiState.Error -> {
                 ErrorScreen(
@@ -111,7 +118,7 @@ private fun ResultShimmerScreen(modifier: Modifier = Modifier) {
     ) {
         Spacer(Modifier.height(56.dp)) // Placeholder for TopAppBar
 
-        Card(modifier = Modifier.fillMaxWidth().height(112.dp)) {
+        Card(modifier = Modifier.fillMaxWidth().height(150.dp)) {
             Box(modifier = Modifier.fillMaxSize().shimmerBackground())
         }
         Spacer(Modifier.height(16.dp))
@@ -150,9 +157,12 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit, modifier: Modifier
 
 @Composable
 private fun ResultSuccessScreen(
-    result: DiagnosisResult,
+    results: List<DiagnosisResult>,
     modifier: Modifier = Modifier
 ) {
+    val topResult = results.first()
+    val otherResults = if (results.size > 1) results.subList(1, results.size) else emptyList()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -161,25 +171,30 @@ private fun ResultSuccessScreen(
     ) {
         TopAppBar()
         Spacer(Modifier.height(16.dp))
-        DiagnosisCard(result)
+        DiagnosisCard(topResult)
         Spacer(Modifier.height(16.dp))
 
         val aboutItems = listOf(
-            "✔" to "Symptoms: ${result.description}",
-            "✔" to "Disease Type: ${result.diseaseType}"
+            "✔" to "Symptoms: ${topResult.description}",
+            "✔" to "Disease Type: ${topResult.diseaseType}"
         )
         InfoCard(title = "About the Disease", items = aboutItems)
         Spacer(Modifier.height(16.dp))
 
-        val treatmentItems = result.treatment.mapIndexed { index, treatment ->
+        val treatmentItems = topResult.treatment.mapIndexed { index, treatment ->
             (index + 1).toString() to treatment
         }
         InfoCard(title = "Recommended Treatment", items = treatmentItems)
         Spacer(Modifier.height(16.dp))
 
-        val preventionItems = result.prevention.map { "✔" to it }
+        val preventionItems = topResult.prevention.map { "✔" to it }
         InfoCard(title = "Prevention", items = preventionItems)
         Spacer(Modifier.height(16.dp))
+
+        if (otherResults.isNotEmpty()) {
+            OtherResultsCard(otherResults)
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 
@@ -249,6 +264,46 @@ private fun InfoCard(title: String, items: List<Pair<String, String>>) {
                     Text(text = text, color = MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(Modifier.height(4.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun OtherResultsCard(results: List<DiagnosisResult>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Other Possibilities",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+            results.forEach { result ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "${result.plantName} - ${result.disease}",
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = "${(result.confidence * 100).toInt()}%",
+                        fontWeight = FontWeight.Light,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }

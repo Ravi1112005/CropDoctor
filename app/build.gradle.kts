@@ -1,7 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Load the local.properties file
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
@@ -18,6 +28,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String", 
+            "GEMINI_API_KEY", 
+            "\"${localProperties.getProperty("GEMINI_API_KEY", "").trim().removeSurrounding("\"")}\""
+        )
     }
 
     buildTypes {
@@ -38,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // Enable the BuildConfig feature
     }
 }
 
@@ -53,18 +70,17 @@ dependencies {
 
     implementation(libs.coil.compose)
 
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.5")
+    implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
-    val camerax_version = "1.3.1"
+    val camerax_version = "1.5.1"
     implementation("androidx.camera:camera-core:$camerax_version")
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:$camerax_version")
 
-    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.3")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.15.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

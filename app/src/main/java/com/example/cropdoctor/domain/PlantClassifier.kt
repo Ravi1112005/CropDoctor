@@ -15,5 +15,5 @@ interface PlantClassifier {
      * @param rotationDegrees The rotation of the image that needs to be corrected before inference.
      * @return A list of [DiagnosisResult] objects, sorted by confidence in descending order.
      */
-    fun classify(bitmap: Bitmap, rotationDegrees: Int): List<DiagnosisResult>
+    suspend fun classify(bitmap: Bitmap, rotationDegrees: Int): List<DiagnosisResult>
 }
