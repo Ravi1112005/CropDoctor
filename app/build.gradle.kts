@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 // Load the local.properties file
@@ -33,6 +34,11 @@ android {
             "String", 
             "GEMINI_API_KEY", 
             "\"${localProperties.getProperty("GEMINI_API_KEY", "").trim().removeSurrounding("\"")}\""
+        )
+        buildConfigField(
+            "String",
+            "WEB_CLIENT_ID",
+            "\"${localProperties.getProperty("WEB_CLIENT_ID", "").trim().removeSurrounding("\"")}\""
         )
     }
 
@@ -73,14 +79,21 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.ui.geometry)
 
-    val camerax_version = "1.5.1"
-    implementation("androidx.camera:camera-core:$camerax_version")
-    implementation("androidx.camera:camera-camera2:$camerax_version")
-    implementation("androidx.camera:camera-lifecycle:$camerax_version")
-    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation(libs.gson)
+    implementation(libs.generativeai)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.firestore)
+    implementation(libs.google.play.services.auth)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

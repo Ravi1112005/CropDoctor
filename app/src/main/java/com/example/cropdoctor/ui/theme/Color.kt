@@ -15,4 +15,8 @@ val DarkBackground = Color(0xFF121212) // Kept for reference, but not used in th
 val DarkCard = Color(0xFF222222) // A lighter dark grey for cards
 val TextWhite = Color(0xFFE0E0E0)
 val MediumGreen = Color(0xFF388E3C) // Muted green for dark theme primary actions
-val DarkErrorRed = Color(0xFF8B2222) // A deep red for the dark theme diagnosis card
+val DarkErrorRed = Color(0xFF8B2222)
+
+val Green = Color(0xFF388E3C)
+
+val LimeGreen = Color(0xFF8BC34A)
