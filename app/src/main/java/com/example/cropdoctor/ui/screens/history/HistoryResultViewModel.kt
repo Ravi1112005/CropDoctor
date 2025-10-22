@@ -1,26 +1,35 @@
 package com.example.cropdoctor.ui.screens.history
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 import com.example.cropdoctor.domain.DiagnosisResult
-import com.google.gson.Gson
-import java.net.URLDecoder
-import java.net.URLEncoder
+import com.example.cropdoctor.navigation.Screen
 
 class HistoryResultViewModel : ViewModel() {
-    var historyItem: DiagnosisResult? = null
+    var historyItem by mutableStateOf<DiagnosisResult?>(null)
+        private set
 
-    fun setHistoryData(data: DiagnosisResult) {
-        historyItem = data
+    fun setHistoryData(result: DiagnosisResult) {
+        historyItem = result
     }
 
-    // Helper functions to encode/decode the data for navigation
-    fun encodeResult(result: DiagnosisResult): String {
-        val json = Gson().toJson(result)
-        return URLEncoder.encode(json, "UTF-8")
-    }
-
-    fun decodeResult(json: String): DiagnosisResult {
-        val decodedJson = URLDecoder.decode(json, "UTF-8")
-        return Gson().fromJson(decodedJson, DiagnosisResult::class.java)
+    fun viewHistoryItem(navController: NavController, item: DiagnosisHistory) {
+        val result = DiagnosisResult(
+            plantName = item.plantName,
+            scientificName = item.scientificName,
+            disease = item.diseaseName,
+            confidence = item.confidence,
+            description = item.description,
+            treatment = item.treatment,
+            prevention = item.prevention,
+            imageUri = item.imageUri.toUri(),
+            diseaseType = item.diseaseType
+        )
+        setHistoryData(result)
+        navController.navigate(Screen.HistoryResult.route)
     }
 }

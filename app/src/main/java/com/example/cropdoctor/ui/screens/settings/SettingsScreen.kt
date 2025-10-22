@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,18 +39,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.cropdoctor.navigation.Screen
 import com.example.cropdoctor.ui.components.AppTopBar
 
+/**
+ * A composable screen that displays the app settings.
+ *
+ * @param navController The NavController for navigating between screens.
+ * @param onMenuClick A callback to be invoked when the menu icon is clicked.
+ * @param viewModel The view model for the settings screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    navController: NavController, 
     onMenuClick: () -> Unit,
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showThemeDialog by remember { mutableStateOf(false) }
+
+    if (uiState.signedOut) {
+        LaunchedEffect(Unit) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Settings.route) { inclusive = true }
+            }
+            viewModel.onSignedOut()
+        }
+    }
 
     if (showThemeDialog) {
         ThemeChooserDialog(
@@ -60,7 +79,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = Screen.Settings.title, onMenuClick = onMenuClick, onProfileClick = {}) }
+        topBar = { AppTopBar(title = Screen.Settings.title, onMenuClick = onMenuClick, onProfileClick = { navController.navigate(Screen.Profile.route) }) }
     ) {
         Column(
             modifier = Modifier

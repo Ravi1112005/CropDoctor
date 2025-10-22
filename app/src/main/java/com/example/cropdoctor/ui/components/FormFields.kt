@@ -94,5 +94,5 @@ fun NumericOutLinedTextField(
 @Preview(showBackground = true)
 @Composable
 fun FormFieldPreview() {
-    FormField(label = "Number" , textState = "" , onTextField = { newText ->  } , isNumber = false)
+    FormField(label = "Number" , textState = "" , onTextField = { newText ->  } , isNumber = true)
 }

@@ -158,6 +158,7 @@ fun NavGraph(
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
+                        navController = navController,
                         onMenuClick = { scope.launch { drawerState.open() } },
                         viewModel = settingsViewModel
                     )

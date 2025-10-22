@@ -3,6 +3,7 @@ package com.example.cropdoctor.ui.screens.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,35 +14,30 @@ enum class Theme {
     SYSTEM, LIGHT, DARK
 }
 
-/**
- * UI state for the Settings screen.
- */
 data class SettingsUiState(
-    val theme: Theme = Theme.SYSTEM
+    val theme: Theme = Theme.SYSTEM,
+    val signedOut: Boolean = false
 )
 
-/**
- * ViewModel for the Settings screen.
- */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    /**
-     * Sets the theme preference.
-     */
     fun setTheme(theme: Theme) {
         _uiState.update { it.copy(theme = theme) }
     }
 
-    /**
-     * Clears the application's cache.
-     */
     fun clearCache() {
         viewModelScope.launch {
             val context = getApplication<Application>().applicationContext
             context.cacheDir.deleteRecursively()
+            FirebaseAuth.getInstance().signOut()
+            _uiState.update { it.copy(signedOut = true) }
         }
     }
+    fun onSignedOut() {
+        _uiState.update { it.copy(signedOut = false) }
+    }
+
 }

@@ -59,6 +59,12 @@ import com.example.cropdoctor.ui.theme.CropDoctorTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
+/**
+ * A composable screen that displays the user's profile information.
+ *
+ * @param navController The NavController for navigating between screens.
+ * @param viewModel The view model for the profile screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = viewModel()) {
@@ -98,9 +104,15 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = vi
     }
 
     if (showNameDialog) {
-        EditNameDialog(viewModel = viewModel) {
-            showNameDialog = false
-        }
+        EditNameDialog(
+            viewModel = viewModel,
+            onDismiss = {
+                showNameDialog = false
+                navController.navigate(Screen.Profile.route) {
+                    popUpTo(Screen.Profile.route) { inclusive = true }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -157,6 +169,11 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = vi
                             auth.sendPasswordResetEmail(email)
                                 .addOnSuccessListener {
                                     Toast.makeText(context, "Password reset link sent to $email", Toast.LENGTH_SHORT).show()
+                                    auth.signOut()
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Dashboard.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                                 .addOnFailureListener {
                                     Toast.makeText(context, "Failed to send reset link: ${it.message}", Toast.LENGTH_LONG).show()

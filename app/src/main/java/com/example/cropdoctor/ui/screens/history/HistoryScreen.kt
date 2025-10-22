@@ -1,5 +1,6 @@
 package com.example.cropdoctor.ui.screens.history
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,18 +38,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.cropdoctor.domain.DiagnosisResult
 import com.example.cropdoctor.navigation.Screen
 import com.example.cropdoctor.ui.components.AppTopBar
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * A composable screen that displays the user's diagnosis history.
+ *
+ * @param navController The NavController for navigating between screens.
+ * @param historyViewModel The view model for the diagnosis history.
+ * @param historyResultViewModel The view model for the history result.
+ * @param onMenuClick A callback to be invoked when the menu icon is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -56,9 +65,13 @@ fun HistoryScreen(
     historyResultViewModel: HistoryResultViewModel,
     onMenuClick: () -> Unit
 ) {
-    val history by historyViewModel.history.collectAsState()
-    val isLoading by historyViewModel.isLoading.collectAsState()
+    val uiState by historyViewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf<DiagnosisHistory?>(null) }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        historyViewModel.fetchHistory()
+    }
 
     if (showDeleteDialog != null) {
         DeleteConfirmationDialog(
@@ -73,45 +86,51 @@ fun HistoryScreen(
     Scaffold(
         topBar = { AppTopBar(title = "My Diagnosis History", onMenuClick = onMenuClick, onProfileClick = { navController.navigate(Screen.Profile.route) }) }
     ) { paddingValues ->
-        if (isLoading) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator()
+        when (val state = uiState) {
+            is HistoryUiState.Loading -> {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        } else if (history.isEmpty()) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("No diagnosis history found.")
-            }
-        } else {
-            LazyColumn(modifier = Modifier.padding(paddingValues), contentPadding = PaddingValues(16.dp)) {
-                items(history) { item ->
-                    HistoryItemCard(
-                        item = item,
-                        onClick = {
-                            val result = DiagnosisResult(
-                                plantName = item.plantName,
-                                scientificName = item.scientificName,
-                                disease = item.diseaseName,
-                                confidence = item.confidence,
-                                description = item.description,
-                                treatment = item.treatment,
-                                prevention = item.prevention,
-                                imageUri = item.imageUri.toUri(),
-                                diseaseType = item.diseaseType
+            is HistoryUiState.Success -> {
+                state.userMessage?.let {
+                    LaunchedEffect(it) {
+                        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                        historyViewModel.userMessageShown()
+                    }
+                }
+                if (state.history.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("No diagnosis history found.")
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.padding(paddingValues), contentPadding = PaddingValues(16.dp)) {
+                        items(state.history) { item ->
+                            HistoryItemCard(
+                                item = item,
+                                onClick = { historyResultViewModel.viewHistoryItem(navController, item) },
+                                onDeleteClick = { showDeleteDialog = item }
                             )
-                            historyResultViewModel.setHistoryData(result)
-                            navController.navigate(Screen.HistoryResult.route)
-                        },
-                        onDeleteClick = { showDeleteDialog = item }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
+            }
+            is HistoryUiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(state.message)
                 }
             }
         }

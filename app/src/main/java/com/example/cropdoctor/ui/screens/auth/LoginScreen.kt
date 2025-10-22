@@ -1,72 +1,76 @@
 package com.example.cropdoctor.ui.screens.auth
 
-import android.content.ContentValues
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.cropdoctor.BuildConfig
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cropdoctor.R
 import com.example.cropdoctor.ui.components.FormField
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.firebase.auth.FirebaseAuth
+import com.example.cropdoctor.ui.components.GoogleSignInButton
 import com.google.firebase.auth.GoogleAuthProvider
 
+/**
+ * A composable screen for user login.
+ *
+ * @param onRegisterClick A callback to be invoked when the "Register" button is clicked.
+ * @param onLoginSuccess A callback to be invoked when the user successfully logs in.
+ * @param authViewModel The view model for authentication.
+ */
 @Composable
 fun LoginScreen(
     onRegisterClick: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    var error by remember { mutableStateOf<String?>(null) }
+    val authState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
-
-    LaunchedEffect(Unit) {
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            onLoginSuccess()
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthUiState.Success -> onLoginSuccess()
+            is AuthUiState.Error -> Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+            else -> {}
         }
     }
-
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { result ->
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)!!
-                val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
-                FirebaseAuth.getInstance().signInWithCredential(credential)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            onLoginSuccess()
-                        } else {
-                            error = task.exception?.message
-                        }
-                    }
-            } catch (e: ApiException) {
-                Log.w(ContentValues.TAG, "Google sign in failed", e)
-                error = "Google sign in failed"
-            }
-        }
-    )
 
     if (showForgotPasswordDialog) {
         var resetEmail by rememberSaveable { mutableStateOf("") }
@@ -79,7 +83,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = resetEmail,
-                        onValueChange = { resetEmail = it },
+                        onValuechange = { resetEmail = it },
                         label = { Text("Email") },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -88,14 +92,13 @@ fun LoginScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        FirebaseAuth.getInstance().sendPasswordResetEmail(resetEmail)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    showForgotPasswordDialog = false
-                                } else {
-                                    error = task.exception?.message
-                                }
-                            }
+                        if (resetEmail.isNotBlank()) {
+                            authViewModel.sendPasswordReset(resetEmail)
+                            showForgotPasswordDialog = false
+                            Toast.makeText(context, "Password reset link sent to $resetEmail", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Email cannot be empty", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 ) {
                     Text("Send")
@@ -169,25 +172,18 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            error?.let {
-                Text(text = it, color = MaterialTheme.colorScheme.error)
+            if (authState is AuthUiState.InProgress) {
+                Text((authState as AuthUiState.InProgress).message)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
-                        error = "Email and password are required."
-                        return@Button
+                        Toast.makeText(context, "Email and password are required.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        authViewModel.signIn(email, password)
                     }
-                    FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                onLoginSuccess()
-                            } else {
-                                error = task.exception?.message
-                            }
-                        }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -209,22 +205,10 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedButton(
-                    onClick = {
-                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(BuildConfig.WEB_CLIENT_ID)
-                            .requestEmail()
-                            .build()
-
-                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Image(painterResource(id = R.drawable.google_icon), contentDescription = "Google Icon", modifier = Modifier.size(25.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Continue with Google")
-                }
+                GoogleSignInButton(
+                    onSuccess = { idToken -> authViewModel.signInWithGoogle(GoogleAuthProvider.getCredential(idToken, null)) },
+                    onError = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                )
             }
         }
     }

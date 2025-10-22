@@ -30,7 +30,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -50,11 +49,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.core.graphics.decodeBitmap
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.cropdoctor.domain.DiagnosisResult
@@ -65,22 +62,30 @@ import com.example.cropdoctor.ui.components.shimmerBackground
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisUiState
 import com.example.cropdoctor.ui.screens.diagnosis.DiagnosisViewModel
 import com.example.cropdoctor.ui.screens.history.HistoryResultViewModel
-import com.example.cropdoctor.ui.theme.CropDoctorTheme
 
+/**
+ * A composable screen that displays the diagnosis result.
+ *
+ * @param navController The NavController for navigating between screens.
+ * @param onNavigateBack A callback to be invoked when the user navigates back.
+ * @param onMenuClick A callback to be invoked when the menu icon is clicked.
+ * @param imageUri The URI of the image to be analyzed.
+ * @param viewModel The view model for the diagnosis screen.
+ * @param historyResultViewModel The view model for the history result.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
     navController: NavController,
     onNavigateBack: () -> Unit,
     onMenuClick: () -> Unit,
-    imageUri: Uri? = null, // For new scans
-    viewModel: DiagnosisViewModel? = null, // For new scans
-    historyResultViewModel: HistoryResultViewModel? = null, // For viewing history
+    imageUri: Uri? = null, 
+    viewModel: DiagnosisViewModel? = null, 
+    historyResultViewModel: HistoryResultViewModel? = null, 
 ) {
     val context = LocalContext.current
 
     if (imageUri != null && viewModel != null) {
-        // --- Live Analysis Mode ---
         val uiState by viewModel.uiState.collectAsState()
         var historySaved by remember(imageUri) { mutableStateOf(false) }
 
@@ -124,7 +129,6 @@ fun ResultScreen(
             }
         }
     } else if (historyResultViewModel?.historyItem != null) {
-        // --- History View Mode ---
         val result = historyResultViewModel.historyItem!!
         Scaffold(
             topBar = { AppTopBar(onMenuClick = onMenuClick, onProfileClick = { navController.navigate(Screen.Profile.route) }) },
@@ -133,22 +137,19 @@ fun ResultScreen(
             ResultSuccessScreen(results = listOf(result), modifier = Modifier.padding(paddingValues))
         }
     } else {
-        // --- Error: Invalid state ---
         ErrorScreen(message = "Could not load diagnosis data.", onRetry = onNavigateBack)
     }
 }
 
 private fun shareDiagnosis(context: Context, result: DiagnosisResult) {
     try {
-        // --- CHANGE IS HERE: Load the bitmap from the Uri first ---
         val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, result.imageUri))
         } else {
             @Suppress("DEPRECATION")
             MediaStore.Images.Media.getBitmap(context.contentResolver, result.imageUri)
-        }.copy(Bitmap.Config.ARGB_8888, false) // Ensure it's mutable if needed, and ARGB_8888
+        }.copy(Bitmap.Config.ARGB_8888, false)
 
-        // --- CHANGE IS HERE: Pass the loaded bitmap to createPdf ---
         val pdfFile = createPdf(context, result, bitmap)
         val pdfUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", pdfFile)
 
@@ -161,9 +162,7 @@ private fun shareDiagnosis(context: Context, result: DiagnosisResult) {
         context.startActivity(Intent.createChooser(shareIntent, "Share Diagnosis Report"))
 
     } catch(e: Exception) {
-        // Handle cases where the bitmap can't be loaded
         e.printStackTrace()
-        // Optionally show a Toast message to the user
     }
 }
 

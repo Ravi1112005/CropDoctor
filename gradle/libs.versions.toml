@@ -18,6 +18,8 @@ firebaseBom = "34.4.0"
 playServicesAuth = "21.4.0"
 uiGeometry = "1.9.3"
 gson = "2.10.1"
+credentials = "1.6.0-beta02"
+googleid = "1.1.1"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -50,6 +52,7 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 androidx-compose-ui-geometry = { group = "androidx.compose.ui", name = "ui-geometry", version.ref = "uiGeometry" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
