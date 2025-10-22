@@ -83,7 +83,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = resetEmail,
-                        onValuechange = { resetEmail = it },
+                        onValueChange = { resetEmail = it },
                         label = { Text("Email") },
                         modifier = Modifier.fillMaxWidth()
                     )
