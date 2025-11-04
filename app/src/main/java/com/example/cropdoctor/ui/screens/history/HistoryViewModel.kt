@@ -11,9 +11,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 
-// This now includes all fields from the Firestore document
+
 data class DiagnosisHistory(
-    val id: String = "", // Add document ID
+    val id: String = "",
     val userId: String = "",
     val diseaseName: String = "",
     val plantName: String = "",
