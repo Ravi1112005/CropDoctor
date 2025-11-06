@@ -94,7 +94,7 @@ class DiagnosisViewModel : ViewModel() {
                 db.collection("diagnosis_history").add(historyEntry)
 
             } catch (e: Exception) {
-                // Optionally handle saving error, e.g., show a toast
+                e.printStackTrace()
             }
         }
     }
