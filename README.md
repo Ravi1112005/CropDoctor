@@ -4,17 +4,17 @@ CropDoctor is an Android application designed to help farmers and gardeners quic
 
 ## ✨ Features
 
-Here's a quick tour of CropDoctor's key features:
+Here's a quick tour of CropDoctor's key features, presented with detailed descriptions and illustrative screenshots:
 
 | Feature                   | Screenshots                                                                                                       |
 | :------------------------ | :---------------------------------------------------------------------------------------------------------------- |
-| **User Authentication**   | **Login Screen:** <br> <img src="screenshots/login.jpg" alt="Login Screen" width="200" height="360"/> <br> **Register Screen:** <br> <img src="screenshots/sign-up.jpg" alt="Register Screen" width="200" height="360"/> |
-| **Plant Disease Diagnosis** | **Dashboard:** <br> <img src="screenshots/home.jpg" alt="Dashboard Screen" width="200" height="360"/> <br> **Scan Crop Screen:** <br> <img src="screenshots/scan_crop.jpg" alt="Diagnosis Screen" width="200" height="360"/> |
-| **Detailed Diagnosis Results** | **Result (Cedar Apple Rust):** <br> <img src="screenshots/result1.jpg" alt="Result Screen 1" width="220" height="400"/> <br> **Result (Early Blight):** <br> <img src="screenshots/result2.jpg" alt="Result Screen 2" width="220" height="400"/> |
-| **Diagnosis History**     | **History Screen:** <br> <img src="screenshots/history.jpg" alt="History Screen" width="200" height="360"/>        |
-| **User Profile Management** | **Profile Screen:** <br> <img src="screenshots/profile.jpg" alt="Profile Screen" width="200" height="360"/>        |
-| **Settings**              | **Settings Screen:** <br> <img src="screenshots/settings.jpg" alt="Settings Screen" width="200" height="360"/>      |
-| **Navigation Drawer**     | **Navigation Drawer Open:** <br> <img src="screenshots/drawer.jpg" alt="Navigation Drawer" width="220" height="400"/> |
+| **User Authentication** <br> _Securely log in or create a new account using email/password or conveniently with your Google account._ | **Login Screen:** <br> <img src="screenshots/login.jpg" alt="Login Screen" width="200" height="360"/> **Register Screen:** <br> <img src="screenshots/sign-up.jpg" alt="Register Screen" width="200" height="360"/> |
+| **Plant Disease Diagnosis** <br> _Effortlessly identify plant diseases by taking a photo of a diseased leaf. Get instant results and key information._ | **Dashboard:** <br> <img src="screenshots/home.jpg" alt="Dashboard Screen" width="200" height="360"/> **Scan Crop Screen:** <br> <img src="screenshots/scan_crop.jpg" alt="Diagnosis Screen" width="200" height="360"/> |
+| **Detailed Diagnosis Results** <br> _Receive comprehensive details about the detected disease, including symptoms, type, treatment, and prevention strategies._ | **Result (Cedar Apple Rust):** <br> <img src="screenshots/result1.jpg" alt="Result Screen 1" width="220" height="400"/> **Result (Early Blight):** <br> <img src="screenshots/result2.jpg" alt="Result Screen 2" width="220" height="400"/> |
+| **Diagnosis History** <br> _Access a chronological record of all your past diagnoses, allowing you to review previous scans and their results._     | **History Screen:** <br> <img src="screenshots/history.jpg" alt="History Screen" width="200" height="360"/>        |
+| **User Profile Management** <br> _Manage your personal information and account settings, ensuring your app experience is tailored to you._ | **Profile Screen:** <br> <img src="screenshots/profile.jpg" alt="Profile Screen" width="200" height="360"/>        |
+| **Settings** <br> _Customize various app preferences, such as theme settings, and manage local data like cache._              | **Settings Screen:** <br> <img src="screenshots/settings.jpg" alt="Settings Screen" width="200" height="360"/>      |
+| **Navigation Drawer** <br> _Navigate seamlessly through different sections of the app with an intuitive and accessible side menu._     | **Navigation Drawer Open:** <br> <img src="screenshots/drawer.jpg" alt="Navigation Drawer" width="220" height="400"/> |
 
 ## 🚀 Technology Stack
 
