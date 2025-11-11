@@ -2,46 +2,24 @@
 
 CropDoctor is an Android application designed to help farmers and gardeners quickly identify plant diseases using image recognition. By simply taking a picture of a diseased leaf, users can get an instant diagnosis, detailed descriptions of the disease, recommended treatments, and prevention strategies. The app also keeps a history of all diagnoses for easy reference.
 
-## Features
+## ✨ Features
 
-*   **User Authentication:** Secure login and registration with email/password or Google Sign-In.
-    *   **Login Screen:**
-        <img src="screenshots/login.jpg" alt="Login Screen" width="250" height="450"/>
-    *   **Register Screen:**
-        <img src="screenshots/sign-up.jpg" alt="Register Screen" width="250" height="450"/>
+Here's a quick tour of CropDoctor's key features:
 
-*   **Plant Disease Diagnosis:** Analyze plant images to detect diseases.
-    *   **Dashboard:** Quickly access the scan feature and view recent diagnoses.
-        <img src="screenshots/home.jpg" alt="Dashboard Screen" width="250" height="450"/>
-    *   **Scan Crop Screen:** Capture images of plant leaves for analysis.
-        <img src="screenshots/scan_crop.jpg" alt="Diagnosis Screen" width="250" height="450"/>
+| Feature                   | Screenshots                                                                                                       |
+| :------------------------ | :---------------------------------------------------------------------------------------------------------------- |
+| **User Authentication**   | **Login Screen:** <br> <img src="screenshots/login.jpg" alt="Login Screen" width="200" height="360"/> <br> **Register Screen:** <br> <img src="screenshots/sign-up.jpg" alt="Register Screen" width="200" height="360"/> |
+| **Plant Disease Diagnosis** | **Dashboard:** <br> <img src="screenshots/home.jpg" alt="Dashboard Screen" width="200" height="360"/> <br> **Scan Crop Screen:** <br> <img src="screenshots/scan_crop.jpg" alt="Diagnosis Screen" width="200" height="360"/> |
+| **Detailed Diagnosis Results** | **Result (Cedar Apple Rust):** <br> <img src="screenshots/result1.jpg" alt="Result Screen 1" width="220" height="400"/> <br> **Result (Early Blight):** <br> <img src="screenshots/result2.jpg" alt="Result Screen 2" width="220" height="400"/> |
+| **Diagnosis History**     | **History Screen:** <br> <img src="screenshots/history.jpg" alt="History Screen" width="200" height="360"/>        |
+| **User Profile Management** | **Profile Screen:** <br> <img src="screenshots/profile.jpg" alt="Profile Screen" width="200" height="360"/>        |
+| **Settings**              | **Settings Screen:** <br> <img src="screenshots/settings.jpg" alt="Settings Screen" width="200" height="360"/>      |
+| **Navigation Drawer**     | **Navigation Drawer Open:** <br> <img src="screenshots/drawer.jpg" alt="Navigation Drawer" width="220" height="400"/> |
 
-*   **Detailed Diagnosis Results:** View comprehensive information about the detected disease.
-    *   **Result Screen (Cedar Apple Rust):**
-        <img src="screenshots/result1.jpg" alt="Result Screen 1" width="280" height="500"/>
-    *   **Result Screen (Early Blight):**
-        <img src="screenshots/result2.jpg" alt="Result Screen 2" width="280" height="500"/>
+## 🚀 Technology Stack
 
-*   **Diagnosis History:** Keep track of all previous diagnoses with images and details.
-    *   **History Screen:**
-        <img src="screenshots/history.jpg" alt="History Screen" width="250" height="450"/>
-
-*   **User Profile Management:** View and update user information.
-    *   **Profile Screen:**
-        <img src="screenshots/profile.jpg" alt="Profile Screen" width="250" height="450"/>
-
-*   **Settings:** Customize app preferences, including theme.
-    *   **Settings Screen:**
-        <img src="screenshots/settings.jpg" alt="Settings Screen" width="250" height="450"/>
-
-*   **Navigation Drawer:** Easy access to various sections of the app.
-    *   **Navigation Drawer Open:**
-        <img src="screenshots/drawer.jpg" alt="Navigation Drawer" width="280" height="500"/>
-
-## Technology Stack
-
-*   **Jetpack Compose:** For building the UI.
-*   **Gemini API:** For advanced image analysis and disease identification.
-*   **Firebase (Firestore, Authentication, Storage):** For backend services, user management, and data storage.
-*   **Coil:** For image loading and caching.
-*   **Navigation Compose:** For managing in-app navigation.
+*   **Jetpack Compose:** For building the declarative UI.
+*   **Gemini API:** Utilized for advanced image analysis and accurate disease identification.
+*   **Firebase (Firestore, Authentication, Storage):** Provides robust backend services for user management, secure authentication, and data storage.
+*   **Coil:** An efficient image loading and caching library for Android.
+*   **Navigation Compose:** For seamless in-app navigation management.
