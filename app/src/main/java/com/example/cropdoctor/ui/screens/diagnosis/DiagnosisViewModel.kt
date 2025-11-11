@@ -87,7 +87,8 @@ class DiagnosisViewModel : ViewModel() {
                     "imageUri" to permanentUri.toString(), // Save the permanent URI
                     "description" to result.description,
                     "treatment" to result.treatment,
-                    "prevention" to result.prevention
+                    "prevention" to result.prevention,
+                    "diseaseType" to result.diseaseType
                 )
 
                 // 3. Save to Firestore

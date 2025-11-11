@@ -63,7 +63,7 @@ class LlmPlantClassifier : PlantClassifier {
                     disease = jsonObject.getString("disease"),
                     confidence = jsonObject.getDouble("confidence").toFloat(),
                     description = jsonObject.getString("description"),
-                    diseaseType = jsonObject.getString("diseaseType"),
+                    diseaseType = jsonObject.optString("diseaseType", "N/A"), // Using optString for safety
                     treatment = jsonObject.getJSONArray("treatment").let { 0.until(it.length()).map(it::getString) },
                     prevention = jsonObject.getJSONArray("prevention").let { 0.until(it.length()).map(it::getString) }
                 )
